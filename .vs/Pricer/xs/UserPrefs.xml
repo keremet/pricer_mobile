@@ -1,0 +1,17 @@
+﻿<Properties StartupConfiguration="{B581782C-1651-4029-B8BD-B0E5CF2109B6}|Default">
+  <MonoDevelop.Ide.Workbench ActiveDocument="MainPage.cs">
+    <Files>
+      <File FileName="MainPage.cs" Line="4" Column="1" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.ItemProperties.Pricer.Droid PreferredExecutionTarget="Android.Android_ARMv7a_Nougat" />
+  <MonoDevelop.Ide.ItemProperties.Pricer.iOS PreferredExecutionTarget="MonoDevelop.IPhone.IPhoneSimulatorTarget.F7E51F15-46AF-4929-B933-2BB16F7A09CA">
+    <MonoDevelop.MacDev.AppleDevelopmentTeam />
+  </MonoDevelop.Ide.ItemProperties.Pricer.iOS>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|iPhoneSimulator" />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MultiItemStartupConfigurations />
+</Properties>
