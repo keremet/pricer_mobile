@@ -179,9 +179,16 @@ namespace Pricer
             request.ContentType = "application/x-www-form-urlencoded";
             request.ContentLength = byteArray.Length;
 
-            using (Stream dataStream = request.GetRequestStream())
+            try
             {
-                dataStream.Write(byteArray, 0, byteArray.Length);
+                using (Stream dataStream = request.GetRequestStream())
+                {
+                    dataStream.Write(byteArray, 0, byteArray.Length);
+                }
+            }
+            catch (Exception ex)
+            {
+                lblInfo.Text = "Ошибка отправки " + ex.Message;
             }
 
             try
@@ -198,7 +205,7 @@ namespace Pricer
             }
             catch (Exception ex)
             {
-                lblInfo.Text = "Ошибка отправки " + ex.Message;
+                lblInfo.Text = "Ошибка получения ответа " + ex.Message;
             }
 
         }
