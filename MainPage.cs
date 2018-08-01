@@ -166,8 +166,22 @@ namespace Pricer
 
         private async void OnBtnSndClicked(object sender, System.EventArgs e)
         {
+            string login = _loginField.Text;
+            if (String.IsNullOrWhiteSpace(login))
+            {
+                lblInfo.Text = "Введите логин";
+                return;
+            }
+
+            string passwd = _pwdField.Text;
+            if (String.IsNullOrWhiteSpace(passwd))
+            {
+                lblInfo.Text = "Введите пароль";
+                return;
+            }
+
             lblInfo.Text = "Ожидание ответа сервера";
-            System.Net.WebRequest request = System.Net.WebRequest.Create(string.Format("{0}?login={1}&passwd={2}", "http://orv.org.ru/pricer/api/receipt/send.php", _loginField.Text, _pwdField.Text));
+            System.Net.WebRequest request = System.Net.WebRequest.Create(string.Format("{0}?login={1}&passwd={2}", "http://orv.org.ru/pricer/api/receipt/send.php", login, passwd));
             request.Method = "POST";
             var lst = listView.ItemsSource as string[];
             string sName = "";
