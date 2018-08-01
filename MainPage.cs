@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using Xamarin.Forms;
 
@@ -8,17 +9,33 @@ namespace Pricer
     {
         private ListView listView;
         private Label lblInfo;
-        private string dir;
+        private readonly string dir;
 
         private Entry _loginField;
         private Entry _pwdField;
 
+        private class Receipt
+        {
+            public string Title { get; set; }
+            public string Detail { get; set; }
+        }
+
         public MainPage()
         {
-            listView = new ListView();
+            listView = new ListView
+            {
+                HasUnevenRows = true,
+                ItemTemplate = new DataTemplate(() =>
+                {
+                    TextCell textCell = new TextCell { TextColor = Color.Red, DetailColor = Color.Green };
+                    textCell.SetBinding(TextCell.TextProperty, "Title");
+                    textCell.SetBinding(TextCell.DetailProperty, "Detail");
+                    return textCell;
+                })
+            };
             dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "scanned");
             listView.ItemSelected += (sender, e) => {
-                DisplayAlert("Содержимое QR кода", (e.SelectedItem as string), "Закрыть");
+                DisplayAlert("Содержимое QR кода", (e.SelectedItem as Receipt).Detail, "Закрыть");
             };
             UpdateReceipts();
 
@@ -149,8 +166,39 @@ namespace Pricer
                     receipts[i] = Path.GetFileName(receipts[i]);
                 }
             }
-           // string[] receipts = new string[] { "iPhone 7", "Samsung Galaxy S8", "Huawei P10", "LG G6" };
-            listView.ItemsSource = receipts;
+            List<Receipt> Receipts = new List<Receipt> { };
+            for (int i = 0; i < receipts.Length; i++)
+            {
+                String[] p = receipts[i].Split("&".ToCharArray());
+                string title = "";
+                for (int iP = 0; iP < p.Length; iP++)
+                {
+                    if ((p[iP][0] == 't') && (p[iP][1] == '='))
+                    {
+                        title = p[iP].Substring(8, 2) + "." + p[iP].Substring(6, 2) + "." + p[iP].Substring(4, 2)
+                            + " " + p[iP].Substring(11, 2) + ":" + p[iP].Substring(13, 2);
+                        break;
+                    }
+                }
+                for (int iP = 0; iP < p.Length; iP++)
+                {
+                    if ((p[iP][0] == 's') && (p[iP][1] == '='))
+                    {
+                        title += "  " + p[iP].Substring(2);
+                        break;
+                    }
+                }
+
+                Receipts.Add(
+                    new Receipt
+                    {
+                        Detail = receipts[i],
+                        Title = title
+                    }
+                );
+            }
+
+            listView.ItemsSource = Receipts;
         }
 
         private void OnBtnScanClicked(object sender, System.EventArgs e)
@@ -160,7 +208,7 @@ namespace Pricer
 
         private void OnBtnDelClicked(object sender, System.EventArgs e)
         {
-            File.Delete(Path.Combine(dir, (listView.SelectedItem as string)));
+            File.Delete(Path.Combine(dir, (listView.SelectedItem as Receipt).Detail));
             UpdateReceipts();
         }
 
@@ -183,11 +231,11 @@ namespace Pricer
             lblInfo.Text = "Ожидание ответа сервера";
             System.Net.WebRequest request = System.Net.WebRequest.Create(string.Format("{0}?login={1}&passwd={2}", "http://orv.org.ru/pricer/api/receipt/send.php", login, passwd));
             request.Method = "POST";
-            var lst = listView.ItemsSource as string[];
+            var lst = listView.ItemsSource as List<Receipt>;
             string sName = "";
-            for(int i = 0; i < lst.Length; i++)
+            foreach( Receipt r in lst)
             {
-                sName += lst[i] + ';';
+                sName += r.Detail + ';';
             }
             byte[] byteArray = System.Text.Encoding.UTF8.GetBytes(sName);
             request.ContentType = "application/x-www-form-urlencoded";
