@@ -69,6 +69,16 @@ namespace Pricer
             };
             btnDel.Clicked += OnBtnDelClicked;
 
+            Button btnDelAll = new Button
+            {
+                Text = "Удалить все",
+                FontSize = Device.GetNamedSize(NamedSize.Small, typeof(Button)),
+                BorderWidth = 1,
+                HorizontalOptions = LayoutOptions.Start,
+                VerticalOptions = LayoutOptions.Start
+            };
+            btnDelAll.Clicked += OnBtnDelAllClicked;
+
             var stackLayoutButtons = new StackLayout
             {
                 Orientation = StackOrientation.Horizontal,
@@ -90,7 +100,7 @@ namespace Pricer
                 VerticalOptions = LayoutOptions.Start,
                 HorizontalOptions = LayoutOptions.Start,
                 Children = {
-                    stackLayoutButtons, lblInfo, listView
+                    stackLayoutButtons, lblInfo, listView, btnDelAll
                 }
             };
 
@@ -156,46 +166,47 @@ namespace Pricer
 
         private void UpdateReceipts()
         {
-            string[] receipts = null;
+            List<Receipt> Receipts = new List<Receipt> { };
+
             if (Directory.Exists(dir))
             {
-                receipts = Directory.GetFiles(dir);
+                string[] receipts = Directory.GetFiles(dir);
 
                 for (int i = 0; i < receipts.Length; i++)
                 {
                     receipts[i] = Path.GetFileName(receipts[i]);
                 }
-            }
-            List<Receipt> Receipts = new List<Receipt> { };
-            for (int i = 0; i < receipts.Length; i++)
-            {
-                String[] p = receipts[i].Split("&".ToCharArray());
-                string title = "";
-                for (int iP = 0; iP < p.Length; iP++)
-                {
-                    if ((p[iP][0] == 't') && (p[iP][1] == '='))
-                    {
-                        title = p[iP].Substring(8, 2) + "." + p[iP].Substring(6, 2) + "." + p[iP].Substring(4, 2)
-                            + " " + p[iP].Substring(11, 2) + ":" + p[iP].Substring(13, 2);
-                        break;
-                    }
-                }
-                for (int iP = 0; iP < p.Length; iP++)
-                {
-                    if ((p[iP][0] == 's') && (p[iP][1] == '='))
-                    {
-                        title += "  " + p[iP].Substring(2);
-                        break;
-                    }
-                }
 
-                Receipts.Add(
-                    new Receipt
+                for (int i = 0; i < receipts.Length; i++)
+                {
+                    String[] p = receipts[i].Split("&".ToCharArray());
+                    string title = "";
+                    for (int iP = 0; iP < p.Length; iP++)
                     {
-                        Detail = receipts[i],
-                        Title = title
+                        if ((p[iP][0] == 't') && (p[iP][1] == '='))
+                        {
+                            title = p[iP].Substring(8, 2) + "." + p[iP].Substring(6, 2) + "." + p[iP].Substring(4, 2)
+                                + " " + p[iP].Substring(11, 2) + ":" + p[iP].Substring(13, 2);
+                            break;
+                        }
                     }
-                );
+                    for (int iP = 0; iP < p.Length; iP++)
+                    {
+                        if ((p[iP][0] == 's') && (p[iP][1] == '='))
+                        {
+                            title += "  " + p[iP].Substring(2);
+                            break;
+                        }
+                    }
+
+                    Receipts.Add(
+                        new Receipt
+                        {
+                            Detail = receipts[i],
+                            Title = title
+                        }
+                    );
+                }
             }
 
             listView.ItemsSource = Receipts;
@@ -208,12 +219,49 @@ namespace Pricer
 
         private void OnBtnDelClicked(object sender, System.EventArgs e)
         {
-            File.Delete(Path.Combine(dir, (listView.SelectedItem as Receipt).Detail));
+            Receipt r = (listView.SelectedItem as Receipt);
+            if (r != null)
+            {
+                try
+                {
+                    File.Delete(Path.Combine(dir, r.Detail));
+                    lblInfo.Text = "";
+                }
+                catch (Exception ex)
+                {
+                    lblInfo.Text = "Ошибка удаления чека " + ex.Message;
+                }
+                UpdateReceipts();
+            }
+            else
+            {
+                lblInfo.Text = "Не выбран чек для удаления";
+            }
+        }
+
+        private void OnBtnDelAllClicked(object sender, System.EventArgs e)
+        {
+            try
+            {
+                Directory.Delete(dir, true);
+                lblInfo.Text = "";
+            }
+            catch (Exception ex)
+            {
+                lblInfo.Text = "Ошибка удаления всех чеков " + ex.Message;
+            }
             UpdateReceipts();
         }
 
         private async void OnBtnSndClicked(object sender, System.EventArgs e)
         {
+            var lst = listView.ItemsSource as List<Receipt>;
+            if (lst.Count == 0)
+            {
+                lblInfo.Text = "Нет чеков для отправки";
+                return;
+            }
+
             string login = _loginField.Text;
             if (String.IsNullOrWhiteSpace(login))
             {
@@ -231,7 +279,6 @@ namespace Pricer
             lblInfo.Text = "Ожидание ответа сервера";
             System.Net.WebRequest request = System.Net.WebRequest.Create(string.Format("{0}?login={1}&passwd={2}", "http://orv.org.ru/pricer/api/receipt/send.php", login, passwd));
             request.Method = "POST";
-            var lst = listView.ItemsSource as List<Receipt>;
             string sName = "";
             foreach( Receipt r in lst)
             {
