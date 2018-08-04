@@ -35,7 +35,7 @@ namespace Pricer
             };
             dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "scanned");
             listView.ItemSelected += (sender, e) => {
-                DisplayAlert("Содержимое QR кода", (e.SelectedItem as Receipt).Detail, "Закрыть");
+                lblInfo.Text = "Содержимое QR кода:\n" + (e.SelectedItem as Receipt).Detail;
             };
             UpdateReceipts();
 
